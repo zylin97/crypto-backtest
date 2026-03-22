@@ -7,8 +7,16 @@ class BacktestEngine:
     """回测引擎 — 基于事件驱动的简易回测框架"""
 
     def __init__(self, data: pd.DataFrame, initial_capital: float = 10000.0,
-                 commission: float = 0.001):
+                 commission: float = 0.001,
+                 start_date: Optional[str] = None,
+                 end_date: Optional[str] = None):
         self.data = data.copy()
+        if start_date:
+            self.data = self.data[self.data.index >= pd.Timestamp(start_date)]
+        if end_date:
+            self.data = self.data[self.data.index <= pd.Timestamp(end_date)]
+        if self.data.empty:
+            raise ValueError('过滤后数据为空，请检查日期范围')
         self.initial_capital = initial_capital
         self.commission = commission
         self.positions = 0.0
