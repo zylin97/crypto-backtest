@@ -31,3 +31,28 @@ class SMACross(Strategy):
         signals[(prev_fast >= prev_slow) & (fast_ma < slow_ma)] = -1
 
         return signals
+
+
+class BollingerBand(Strategy):
+    """布林带策略 — 价格触及下轨买入，触及上轨卖出"""
+
+    def __init__(self, period: int = 20, num_std: float = 2.0):
+        self.period = period
+        self.num_std = num_std
+
+    def generate_signals(self, data: pd.DataFrame) -> pd.Series:
+        ma = data['close'].rolling(self.period).mean()
+        std = data['close'].rolling(self.period).std()
+        upper = ma + self.num_std * std
+        lower = ma - self.num_std * std
+
+        signals = pd.Series(0, index=data.index)
+
+        prev_close = data['close'].shift(1)
+        prev_lower = lower.shift(1)
+        prev_upper = upper.shift(1)
+
+        signals[(prev_close >= prev_lower) & (data['close'] < lower)] = 1
+        signals[(prev_close <= prev_upper) & (data['close'] > upper)] = -1
+
+        return signals
