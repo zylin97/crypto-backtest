@@ -4,7 +4,6 @@ from typing import Optional
 
 
 class BacktestEngine:
-    """回测引擎 — 基于事件驱动的简易回测框架"""
 
     def __init__(self, data: pd.DataFrame, initial_capital: float = 10000.0,
                  commission: float = 0.001,

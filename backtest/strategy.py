@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 
 
 class Strategy(ABC):
-    """策略基类"""
 
     @abstractmethod
     def generate_signals(self, data: pd.DataFrame) -> pd.Series:
@@ -12,7 +11,6 @@ class Strategy(ABC):
 
 
 class SMACross(Strategy):
-    """SMA均线交叉策略"""
 
     def __init__(self, fast_period: int = 10, slow_period: int = 30):
         self.fast_period = fast_period
@@ -34,7 +32,7 @@ class SMACross(Strategy):
 
 
 class BollingerBand(Strategy):
-    """布林带策略 — 价格触及下轨买入，触及上轨卖出"""
+    # 布林带, 下轨买上轨卖
 
     def __init__(self, period: int = 20, num_std: float = 2.0):
         self.period = period
@@ -59,15 +57,8 @@ class BollingerBand(Strategy):
 
 
 class FundingRateArb(Strategy):
-    """资金费率套利策略
-
-    原理: 当永续合约资金费率持续为正时，做多现货+做空永续，
-    捕获资金费率收益。当费率转负或低于阈值时平仓。
-
-    参考: Gu & Zhu (2024) "Perpetual Futures Basis Trading"
-    实盘中在Binance/OKX上跑了一年多, 年化8-15%。迁移到链上是
-    因为CEX counterparty risk和提币冻结问题。
-    """
+    # funding rate套利, 在binance上跑了一年多大概8-15%年化
+    # 现在想搬到链上试试
 
     def __init__(self, entry_threshold: float = 0.01,
                  exit_threshold: float = 0.002,
@@ -98,16 +89,9 @@ class FundingRateArb(Strategy):
 
 
 class VolatilityRegime(Strategy):
-    """波动率regime切换策略
-
-    用已实现波动率的HMM思想做regime检测，不依赖外部库。
-    通过波动率分位数划分高/低regime:
-      - 低波动regime: 趋势跟踪 (动量)
-      - 高波动regime: 均值回归
-
-    这是我在OKX上用的核心策略的简化版本。实盘版本用了
-    滚动窗口的EM算法做HMM参数估计，这里用分位数近似。
-    """
+    # 波动率regime检测, 简化版
+    # 低波动用动量, 高波动用均值回归
+    # 实盘版用的hmm, 这里用分位数近似差不多够了
 
     def __init__(self, vol_window: int = 20, vol_quantile: float = 0.7,
                  momentum_window: int = 14, mean_rev_window: int = 10):
@@ -145,16 +129,8 @@ class VolatilityRegime(Strategy):
 
 
 class VolumeWeightedMomentum(Strategy):
-    """成交量加权动量策略
-
-    基本动量策略的问题是忽略了成交量信息。大成交量伴随的
-    价格突破比低成交量的假突破更可靠。
-
-    用VWAP偏离度 + 成交量异常检测来过滤信号:
-      1. 价格在VWAP上方 + 成交量放大 → 做多
-      2. 价格在VWAP下方 + 成交量放大 → 做空
-      3. 成交量正常 → 不操作
-    """
+    # vwap偏离+放量检测
+    # 放量突破比缩量突破可靠的多
 
     def __init__(self, vwap_period: int = 20, vol_mult: float = 1.5,
                  momentum_period: int = 10):
